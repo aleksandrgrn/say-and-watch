@@ -46,4 +46,6 @@
     <string name="api_key_error_network">Нет связи с TMDB. Проверьте подключение</string>
     <string name="api_key_save">Готово</string>
     <string name="api_key_backspace">Стереть</string>
+    <string name="app_prisma" translatable="false">Prisma</string>
+    <string name="app_flux" translatable="false">Flux</string>
 </resources>

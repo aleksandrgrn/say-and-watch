@@ -15,6 +15,8 @@
         <package android:name="top.rootu.lamps" />
         <package android:name="ru.twicker.lampa" />
         <package android:name="com.lazycatsoftware.lmd" />
+        <package android:name="top.rootu.prisma" />
+        <package android:name="app.flux.tv" />
         <package android:name="com.google.android.googlequicksearchbox" />
         <package android:name="com.google.android.tts" />
         <package android:name="com.google.android.apps.gsa" />

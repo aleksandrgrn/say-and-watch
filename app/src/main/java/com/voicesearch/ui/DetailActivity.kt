@@ -115,7 +115,8 @@ class DetailActivity : AppCompatActivity() {
         // Фокус на первую активную кнопку приложения: экран открывают ради запуска
         // фильма, а не «Назад». Неактивные (неустановленные) кнопки пропускаем.
         val firstEnabledButton =
-            listOf(binding.btnNum, binding.btnSmartTube, binding.btnLampa, binding.btnLazyMedia)
+            listOf(binding.btnNum, binding.btnSmartTube, binding.btnLampa, binding.btnLazyMedia,
+                binding.btnPrisma, binding.btnFlux)
                 .firstOrNull { it.isEnabled }
         firstEnabledButton?.requestFocus()
     }
@@ -131,6 +132,8 @@ class DetailActivity : AppCompatActivity() {
             binding.btnLampa to (IntentDispatcher.LAMPA_PACKAGES.firstOrNull { it in searchablePackages }
                 ?: IntentDispatcher.PKG_LAMPA),
             binding.btnLazyMedia to IntentDispatcher.PKG_LAZYMEDIA,
+            binding.btnPrisma to IntentDispatcher.PKG_PRISMA,
+            binding.btnFlux to IntentDispatcher.PKG_FLUX,
         )
 
         buttonAppMap.forEach { (button, packageName) ->

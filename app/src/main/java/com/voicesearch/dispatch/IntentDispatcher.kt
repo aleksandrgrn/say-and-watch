@@ -25,6 +25,9 @@ object IntentDispatcher {
     const val PKG_LAMPA_TWICKER = "ru.twicker.lampa"
     const val PKG_LAZYMEDIA = "com.lazycatsoftware.lmd"
 
+    const val PKG_PRISMA = "top.rootu.prisma"
+    const val PKG_FLUX = "app.flux.tv"
+
     private val TARGET_APPS = listOf(
         TargetApp(PKG_NUM, Intent.ACTION_VIEW, "NUM"),
         TargetApp(PKG_SMARTTUBE, Intent.ACTION_VIEW, "SmartTube",
@@ -34,19 +37,25 @@ object IntentDispatcher {
         // Неявный ACTION_SEARCH у LazyMedia резолвится в ActivityTvArticle, а та падает с NPE
         TargetApp(PKG_LAZYMEDIA, Intent.ACTION_SEARCH, "LazyMediaDeluxe",
             searchActivity = "com.lazycatsoftware.lazymediadeluxe.ui.tv.activities.ActivityTvSearch"),
+        TargetApp(PKG_PRISMA, Intent.ACTION_VIEW, "Prisma"),
+        TargetApp(PKG_FLUX, Intent.ACTION_VIEW, "Flux"),
     )
 
-    /** Каталог этих приложений — TMDB: по ссылке themoviedb.org они открывают карточку. */
-    val TMDB_CARD_PACKAGES = setOf(PKG_NUM, PKG_LAMPA, PKG_LAMPA_TWICKER)
+    /** Эти приложения открывают карточки по TMDB ID через обычные или собственные ссылки. */
+    val TMDB_CARD_PACKAGES = setOf(PKG_NUM, PKG_LAMPA, PKG_LAMPA_TWICKER, PKG_PRISMA, PKG_FLUX)
 
     /** Две сборки Лампы под одной кнопкой; стоит обычно одна из них. */
     val LAMPA_PACKAGES = listOf(PKG_LAMPA, PKG_LAMPA_TWICKER)
 
-    /** Test URI used by getSearchableApps() for NUM — NUM resolves ACTION_VIEW for TMDB URLs. */
-    private const val NUM_TEST_URI = "https://www.themoviedb.org/movie/1"
+    private fun cardUri(packageName: String, tmdbId: String, tmdbType: String): String =
+        when (packageName) {
+            PKG_LAMPA_TWICKER -> "lampa://$PKG_LAMPA_TWICKER/$tmdbType/$tmdbId"
+            PKG_FLUX -> "flux://${if (tmdbType == "tv") "series" else "movie"}/$tmdbId"
+            else -> "https://www.themoviedb.org/$tmdbType/$tmdbId"
+        }
 
     fun launch(context: Context, app: TargetApp, query: String): LaunchResult {
-        if (query.isBlank()) return LaunchResult.NO_HANDLER
+        if (query.isBlank() || app.packageName == PKG_FLUX) return LaunchResult.NO_HANDLER
 
         val pm = context.packageManager
 
@@ -97,7 +106,7 @@ object IntentDispatcher {
     /**
      * Launch a target app, preferring a TMDB deep link when available.
      *
-     * For NUM and Lampa: if tmdbId and tmdbType are provided, opens the specific movie/TV show
+     * For TMDB-backed apps: if tmdbId and tmdbType are provided, opens the specific movie/TV show
      * via ACTION_VIEW + TMDB URI. Otherwise falls through to [launch].
      *
      * For apps with dataUriTemplate (SmartTube): delegates to [launch] which
@@ -112,7 +121,13 @@ object IntentDispatcher {
     ): LaunchResult {
         if (query.isBlank()) return LaunchResult.NO_HANDLER
 
-        // NUM / Lampa with TMDB info → deep link
+        // Flux has no text-search handler: never launch an unrelated screen without a card.
+        if (app.packageName == PKG_FLUX &&
+            (tmdbId.isNullOrBlank() || tmdbType !in setOf("movie", "tv"))) {
+            return LaunchResult.NO_HANDLER
+        }
+
+        // TMDB-backed apps → exact movie / series card
         if (app.packageName in TMDB_CARD_PACKAGES && !tmdbId.isNullOrBlank() && !tmdbType.isNullOrBlank()) {
             val pm = context.packageManager
 
@@ -123,15 +138,11 @@ object IntentDispatcher {
                 return LaunchResult.NO_HANDLER
             }
 
-            // Сборка ru.twicker.lampa ссылок themoviedb.org не берёт — только свою схему.
-            val tmdbUri = if (app.packageName == PKG_LAMPA_TWICKER) {
-                Uri.parse("lampa://$PKG_LAMPA_TWICKER/${tmdbType}/${tmdbId}")
-            } else {
-                Uri.parse("https://www.themoviedb.org/${tmdbType}/${tmdbId}")
-            }
+            val tmdbUri = Uri.parse(cardUri(app.packageName, tmdbId, tmdbType))
             val intent = Intent(Intent.ACTION_VIEW, tmdbUri).apply {
                 setPackage(app.packageName)
-                putExtra(SearchManager.QUERY, query)
+                // Prisma gives the query extra priority over the card URI and opens search.
+                if (app.packageName != PKG_PRISMA) putExtra(SearchManager.QUERY, query)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
@@ -177,9 +188,8 @@ object IntentDispatcher {
                         val encodedQuery = URLEncoder.encode("test", "UTF-8")
                         val uriString = app.dataUriTemplate.replace("{query}", encodedQuery)
                         data = Uri.parse(uriString)
-                    } else if (app.packageName == PKG_NUM) {
-                        // NUM uses ACTION_VIEW with TMDB URI — test with a generic TMDB URI
-                        data = Uri.parse(NUM_TEST_URI)
+                    } else if (app.searchAction == Intent.ACTION_VIEW && app.packageName in TMDB_CARD_PACKAGES) {
+                        data = Uri.parse(cardUri(app.packageName, "1", "movie"))
                     }
                 }
                 pm.resolveActivity(intent, 0) != null

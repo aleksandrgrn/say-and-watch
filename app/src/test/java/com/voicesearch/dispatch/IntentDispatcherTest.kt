@@ -65,6 +65,8 @@ class IntentDispatcherTest {
         stubPackageInstalled("top.rootu.lamps")
         stubPackageInstalled("ru.twicker.lampa")
         stubPackageInstalled("com.lazycatsoftware.lmd")
+        stubPackageInstalled("top.rootu.prisma")
+        stubPackageInstalled("app.flux.tv")
     }
 
     private fun stubResolveActivitySuccess() {
@@ -228,9 +230,9 @@ class IntentDispatcherTest {
     // ===== getAllApps() tests =====
 
     @Test
-    fun getAllApps_returnsFiveApps() {
+    fun getAllApps_returnsSevenApps() {
         val apps = IntentDispatcher.getAllApps()
-        assertEquals(5, apps.size)
+        assertEquals(7, apps.size)
     }
 
     @Test
@@ -293,12 +295,12 @@ class IntentDispatcherTest {
     // ===== getSearchableApps() tests =====
 
     @Test
-    fun getSearchableApps_allResolve_returnsFiveApps() {
+    fun getSearchableApps_allResolve_returnsSevenApps() {
         stubAllPackagesInstalled()
         stubResolveActivitySuccess()
 
         val searchable = IntentDispatcher.getSearchableApps(context)
-        assertEquals(5, searchable.size)
+        assertEquals(7, searchable.size)
     }
 
     @Test
@@ -317,6 +319,8 @@ class IntentDispatcherTest {
         stubPackageInstalled("top.rootu.lamps")
         stubPackageNotInstalled("ru.twicker.lampa")
         stubPackageInstalled("com.lazycatsoftware.lmd")
+        stubPackageNotInstalled("top.rootu.prisma")
+        stubPackageNotInstalled("app.flux.tv")
         stubResolveActivitySuccess()
 
         val searchable = IntentDispatcher.getSearchableApps(context)
@@ -481,8 +485,8 @@ class IntentDispatcherTest {
     }
 
     @Test
-    fun tmdbCardPackages_areNumAndLampa() {
-        assertEquals(setOf("ru.yourok.num", "top.rootu.lamps", "ru.twicker.lampa"), IntentDispatcher.TMDB_CARD_PACKAGES)
+    fun tmdbCardPackages_includePrismaAndFlux() {
+        assertEquals(setOf("ru.yourok.num", "top.rootu.lamps", "ru.twicker.lampa", "top.rootu.prisma", "app.flux.tv"), IntentDispatcher.TMDB_CARD_PACKAGES)
     }
 
     // ===== LazyMedia — поиск только явным компонентом =====
@@ -541,4 +545,54 @@ class IntentDispatcherTest {
         val result = IntentDispatcher.launchWithTmdb(context, num, "Во все тяжкие", "1396", "tv")
         assertEquals(LaunchResult.SUCCESS, result)
     }
+    @Test
+    fun newApps_openExactMovieAndSeriesCards() {
+        val cases = listOf(
+            Triple("top.rootu.prisma", "movie", "https://www.themoviedb.org/movie/603"),
+            Triple("top.rootu.prisma", "tv", "https://www.themoviedb.org/tv/1396"),
+            Triple("app.flux.tv", "movie", "flux://movie/603"),
+            Triple("app.flux.tv", "tv", "flux://series/1396"),
+        )
+        for ((pkg, type, expectedUri) in cases) {
+            val app = IntentDispatcher.getAllApps().first { it.packageName == pkg }
+            stubPackageInstalled(pkg)
+            stubResolveActivitySuccess()
+            mockkStatic(Uri::class)
+            try {
+                every { Uri.parse(any()) } returns mockk()
+                val id = if (type == "movie") "603" else "1396"
+                assertEquals(LaunchResult.SUCCESS,
+                    IntentDispatcher.launchWithTmdb(context, app, "Название", id, type))
+                verify { Uri.parse(expectedUri) }
+            } finally {
+                unmockkStatic(Uri::class)
+            }
+        }
+    }
+
+    @Test
+    fun flux_withoutValidCard_doesNotLaunchUnrelatedScreen() {
+        val app = IntentDispatcher.getAllApps().first { it.packageName == "app.flux.tv" }
+        for ((id, type) in listOf(null to "movie", "603" to null, "603" to "person", "" to "tv")) {
+            assertEquals(LaunchResult.NO_HANDLER,
+                IntentDispatcher.launchWithTmdb(context, app, "Название", id, type))
+        }
+        assertEquals(LaunchResult.NO_HANDLER, IntentDispatcher.launch(context, app, "Название"))
+        verify(exactly = 0) { context.startActivity(any()) }
+    }
+
+    @Test
+    fun flux_discoveryUsesCardUri() {
+        stubAllPackagesInstalled()
+        stubResolveActivitySuccess()
+        mockkStatic(Uri::class)
+        try {
+            every { Uri.parse(any()) } returns mockk()
+            assertTrue(IntentDispatcher.getSearchableApps(context).any { it.packageName == "app.flux.tv" })
+            verify { Uri.parse("flux://movie/1") }
+        } finally {
+            unmockkStatic(Uri::class)
+        }
+    }
+
 }

@@ -580,6 +580,8 @@ class SearchActivity : AppCompatActivity() {
             binding.btnLampa to (IntentDispatcher.LAMPA_PACKAGES.firstOrNull { it in searchablePackages }
                 ?: IntentDispatcher.PKG_LAMPA),
             binding.btnLazyMedia to IntentDispatcher.PKG_LAZYMEDIA,
+            binding.btnPrisma to IntentDispatcher.PKG_PRISMA,
+            binding.btnFlux to IntentDispatcher.PKG_FLUX,
         )
 
         buttonAppMap.forEach { (button, packageName) ->
@@ -596,7 +598,7 @@ class SearchActivity : AppCompatActivity() {
                     }
 
                     val result = if (packageName in IntentDispatcher.TMDB_CARD_PACKAGES) {
-                        // Каталог NUM и Лампы — тот же TMDB: открываем верхний результат,
+                        // Приложения с карточками TMDB: открываем верхний результат,
                         // а не запускаем поиск заново.
                         val top = searchAdapter.currentList.firstOrNull()
                         if (top == null || resultsQuery != query) {

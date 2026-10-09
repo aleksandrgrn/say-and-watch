@@ -216,13 +216,43 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:text="LazyMedia"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
             android:nextFocusUp="@id/backButton"
             android:nextFocusDown="@id/backButton"
-            android:nextFocusLeft="@id/btnLampa" />
+            android:nextFocusLeft="@id/btnLampa"
+            android:nextFocusRight="@id/btnPrisma" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnPrisma"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="@string/app_prisma"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/bg_app_button_selector"
+            android:nextFocusUp="@id/backButton"
+            android:nextFocusDown="@id/backButton"
+            android:nextFocusLeft="@id/btnLazyMedia"
+            android:nextFocusRight="@id/btnFlux" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnFlux"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/app_flux"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/bg_app_button_selector"
+            android:nextFocusUp="@id/backButton"
+            android:nextFocusDown="@id/backButton"
+            android:nextFocusLeft="@id/btnPrisma" />
 
     </LinearLayout>
 
