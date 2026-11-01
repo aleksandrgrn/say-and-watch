@@ -57,10 +57,11 @@
         android:focusableInTouchMode="false"
         android:visibility="gone" />
 
-    <!-- Info row: вся полоса под постером (= его marginBottom), год + название по центру: отступы по 4 dp, как рамка постера -->
+    <!-- Info row: год + название по центру. Высота = marginBottom постера − 4 dp: сверху
+         остаётся 4 dp до постера, снизу 4 dp padding фона — отступы выходят равными -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
         android:layout_gravity="bottom"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
