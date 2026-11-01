@@ -2,9 +2,10 @@ package com.voicesearch.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Карточка результата: высоту задаёт ряд сетки, ширина — от постера (первый ребёнок)
@@ -31,13 +32,20 @@ class AspectCardLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
      * Растягивает карточку так, чтобы целое число карточек с отступами [GAP_DP] ровно
      * закрывало ширину сетки: правый край совпадает с полем поиска и кнопками.
      * Прибавка — меньше одной карточки на весь ряд, постер (centerCrop) срезается на пару px.
+     * Остаток от деления раздаётся по 1 px первым столбцам каждой «страницы» из count
+     * столбцов — иначе справа недоставало бы до count−1 px.
      */
     private fun fitRow(idealWidth: Int): Int {
-        val row = (parent as? View)?.let { it.measuredWidth - it.paddingLeft - it.paddingRight } ?: 0
+        val rv = parent as? RecyclerView
+        val row = rv?.let { it.measuredWidth - it.paddingLeft - it.paddingRight } ?: 0
         if (row <= 0 || idealWidth <= 0) return idealWidth
         val gap = (GAP_DP * resources.displayMetrics.density).toInt()
         val count = maxOf(1, (row + gap) / (idealWidth + gap))
-        return (row - (count - 1) * gap) / count
+        val cards = row - (count - 1) * gap
+        val span = (rv?.layoutManager as? GridLayoutManager)?.spanCount ?: 1
+        val position = (layoutParams as? RecyclerView.LayoutParams)?.viewLayoutPosition ?: 0
+        val column = (position.coerceAtLeast(0) / span) % count
+        return cards / count + if (column < cards % count) 1 else 0
     }
 
     companion object {
