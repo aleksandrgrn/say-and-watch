@@ -121,8 +121,7 @@ class DetailActivity : AppCompatActivity() {
         // App buttons
         val tmdbId = intent.getStringExtra(EXTRA_TMDB_ID)
         setupAppButtons(title, tmdbId, type)
-        setupTrailerSearch(title)
-        loadDetails(tmdbId, type, year)
+        loadDetails(title, tmdbId, type, year)
 
         // Фокус на первую активную кнопку приложения: экран открывают ради запуска
         // фильма, а не «Назад». Неактивные (неустановленные) кнопки пропускаем.
@@ -138,14 +137,21 @@ class DetailActivity : AppCompatActivity() {
         binding.btnTrailer.nextFocusRightId = below
     }
 
-    /** Без русского трейлера в TMDB — поиск «название трейлер» в SmartTube. */
-    private fun setupTrailerSearch(title: String) {
+    /**
+     * Зовётся, когда ответ TMDB уже есть (или его не будет): до этого кнопка серая, чтобы
+     * ранний клик не ушёл в поиск при существующем русском трейлере. Русский трейлер —
+     * ролик в SmartTube, иначе поиск «название трейлер» в SmartTube; без SmartTube — серая.
+     */
+    private fun setupTrailer(title: String, videoKey: String?) {
         val smartTube = IntentDispatcher.getSearchableApps(this)
-            .firstOrNull { it.packageName == IntentDispatcher.PKG_SMARTTUBE } ?: return
-        if (title.isBlank()) return
-        enableTrailer {
-            val query = getString(R.string.trailer_search_query, title)
-            handleLaunchResult(IntentDispatcher.launch(this, smartTube, query), smartTube.displayName)
+            .firstOrNull { it.packageName == IntentDispatcher.PKG_SMARTTUBE }
+        when (val action = trailerAction(videoKey, title, smartTube != null)) {
+            is TrailerAction.Open -> enableTrailer { openTrailer(action.videoKey) }
+            TrailerAction.Search -> enableTrailer {
+                val query = getString(R.string.trailer_search_query, title)
+                handleLaunchResult(IntentDispatcher.launch(this, smartTube!!, query), smartTube.displayName)
+            }
+            TrailerAction.Off -> Unit
         }
     }
 
@@ -206,9 +212,12 @@ class DetailActivity : AppCompatActivity() {
 
     // ===== Детали: возраст, длительность, трейлер =====
 
-    /** Один запрос к TMDB. Ошибка — просто нет этих строк и кнопка трейлера остаётся серой. */
-    private fun loadDetails(tmdbId: String?, type: String?, year: String?) {
-        if (tmdbId.isNullOrBlank() || (type != "movie" && type != "tv")) return
+    /** Один запрос к TMDB. Ошибка — просто нет этих строк, трейлер ищется поиском. */
+    private fun loadDetails(title: String, tmdbId: String?, type: String?, year: String?) {
+        if (tmdbId.isNullOrBlank() || (type != "movie" && type != "tv")) {
+            setupTrailer(title, null)
+            return
+        }
         val key = ApiKeyStore(getSharedPreferences(ApiKeyStore.PREFS_NAME, MODE_PRIVATE)).get()
             ?: BuildConfig.TMDB_API_KEY
         lifecycleScope.launch {
@@ -218,9 +227,11 @@ class DetailActivity : AppCompatActivity() {
                 throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Details failed", e)
+                setupTrailer(title, null)
                 return@launch
             }
             showDetails(details, type, year)
+            setupTrailer(title, details.trailerKey)
         }
     }
 
@@ -244,8 +255,6 @@ class DetailActivity : AppCompatActivity() {
             binding.detailDuration.text = durationLine
             binding.detailDuration.visibility = android.view.View.VISIBLE
         }
-
-        details.trailerKey?.let { videoKey -> enableTrailer { openTrailer(videoKey) } }
     }
 
     private fun formatMinutes(total: Int): String = when {
@@ -254,13 +263,13 @@ class DetailActivity : AppCompatActivity() {
         else -> getString(R.string.duration_hours_minutes, total / 60, total % 60)
     }
 
-    /** Ролик YouTube — в SmartTube, если стоит, иначе в том, что система предложит. */
+    /** Ролик YouTube в SmartTube: кнопку включает только [setupTrailer], когда SmartTube есть. */
     private fun openTrailer(videoKey: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoKey"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val smartTube = Intent(intent).setPackage(IntentDispatcher.PKG_SMARTTUBE)
+            .setPackage(IntentDispatcher.PKG_SMARTTUBE)
         try {
-            startActivity(if (smartTube.resolveActivity(packageManager) != null) smartTube else intent)
+            startActivity(intent)
         } catch (e: ActivityNotFoundException) {
             Log.w(TAG, "No app for trailer $videoKey", e)
             Toast.makeText(this, R.string.trailer_no_player, Toast.LENGTH_LONG).show()

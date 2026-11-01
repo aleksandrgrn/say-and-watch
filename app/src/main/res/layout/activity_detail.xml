@@ -38,8 +38,8 @@
         app:layout_constraintTop_toBottomOf="@id/backButton"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Trailer: под постером, во всю его ширину. Русский трейлер TMDB, иначе поиск в SmartTube;
-         серая, только если нет ни того ни другого. Down/Right переназначаются из кода -->
+    <!-- Trailer: под постером, во всю его ширину. Русский трейлер TMDB, иначе поиск — оба в SmartTube;
+         серая до ответа TMDB и без SmartTube. Down/Right переназначаются из кода -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnTrailer"
         android:layout_width="0dp"

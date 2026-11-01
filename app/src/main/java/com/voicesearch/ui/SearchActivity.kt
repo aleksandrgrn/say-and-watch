@@ -559,6 +559,8 @@ class SearchActivity : AppCompatActivity() {
     private fun focusFirstCardIfIdle() {
         if (isListening || pendingVoiceStart || !binding.voiceButton.isFocused) return
         if (searchAdapter.itemCount == 0) return
+        // Лента могла быть прокручена: карточки 0 тогда нет среди построенных.
+        binding.resultsRecyclerView.scrollToPosition(0)
         binding.resultsRecyclerView.post {
             binding.resultsRecyclerView.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus()
         }
