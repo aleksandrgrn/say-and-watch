@@ -22,8 +22,8 @@ android {
         applicationId = "com.voicesearch"
         minSdk = 28
         targetSdk = 33
-        versionCode = 4
-        versionName = "1.3.17"
+        versionCode = 5
+        versionName = "1.3.18"
     }
 
     signingConfigs {
