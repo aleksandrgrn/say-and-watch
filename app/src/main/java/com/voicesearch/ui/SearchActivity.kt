@@ -695,6 +695,13 @@ class SearchActivity : AppCompatActivity() {
             extraLayoutSpace.fill(width / 4)
         }
 
+        // Столбец левее экрана кончается ровно на его краю. Без фокуса в сетке (фокус ушёл
+        // на кнопку истории или приложений) перекладка берёт опорным его: GridLayoutManager
+        // считает его видимым (end < start строго), а LinearLayoutManager — нет и, пока
+        // supportsPredictiveItemAnimations() = true, ставит его к краю на каждой перекладке.
+        // Сетка съезжала на столбец назад. Цена — без предсказанных позиций в анимации списка.
+        override fun supportsPredictiveItemAnimations() = false
+
         override fun requestChildRectangleOnScreen(
             parent: RecyclerView,
             child: android.view.View,
