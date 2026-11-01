@@ -416,4 +416,30 @@ class TmdbSearchProviderTest {
 
         assertFalse(placeholderProvider.isKeyConfigured)
     }
+
+    // ===== Trending =====
+
+    @Test
+    fun `trending requests weekly trending and maps movies and tv without persons`() = runBlocking {
+        enqueueGenreResponses()
+        server.enqueue(MockResponse().setBody("""
+            {
+              "page":1,
+              "results":[
+                {"id":603,"media_type":"movie","title":"Матрица","release_date":"1999-03-31","genre_ids":[28]},
+                {"id":6384,"media_type":"person","name":"Киану Ривз"},
+                {"id":1399,"media_type":"tv","name":"Игра престолов","first_air_date":"2011-04-17","genre_ids":[18]}
+              ]
+            }
+        """.trimIndent()))
+
+        val results = provider.trending()
+
+        assertEquals(listOf("tmdb_movie_603", "tmdb_tv_1399"), results.map { it.id })
+        assertEquals("Боевик", results[0].metadata["genre"])
+        server.takeRequest(); server.takeRequest() // жанры
+        val request = server.takeRequest()
+        assertEquals("/3/trending/all/week", request.requestUrl?.encodedPath)
+        assertEquals("ru-RU", request.requestUrl?.queryParameter("language"))
+    }
 }

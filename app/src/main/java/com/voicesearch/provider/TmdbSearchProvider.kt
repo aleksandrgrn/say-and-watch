@@ -53,12 +53,28 @@ class TmdbSearchProvider(
 
             val cache = ensureGenreCache()
 
-            val response = searchMulti(query)
+            val response = fetchResults(
+                "search/multi",
+                "query" to query,
+                "page" to "1",
+                "include_adult" to "false"
+            )
             val results = response.results
                 .mapNotNull { item -> TmdbMapper.mapResultItem(item, cache) }
 
             Log.d(TAG, "TMDB search '$query' → ${results.size} results (API total: ${response.totalResults})")
             results
+        }
+    }
+
+    /** Фильмы и сериалы в тренде за неделю — лента на пустом экране. Бросает то же, что и поиск. */
+    suspend fun trending(): List<SearchResult> {
+        return withContext(Dispatchers.Default) {
+            if (!isKeyConfigured) throw TmdbException.ApiKeyInvalid()
+            val cache = ensureGenreCache()
+            fetchResults("trending/all/week")
+                .results
+                .mapNotNull { item -> TmdbMapper.mapResultItem(item, cache) }
         }
     }
 
@@ -139,15 +155,16 @@ class TmdbSearchProvider(
         return response.genres
     }
 
-    private suspend fun searchMulti(query: String): TmdbMultiSearchResponse {
+    private suspend fun fetchResults(
+        path: String,
+        vararg params: Pair<String, String>
+    ): TmdbMultiSearchResponse {
         val baseHttpUrl = baseUrl.toHttpUrl()
         val url = baseHttpUrl.newBuilder()
-            .addPathSegments("search/multi")
+            .addPathSegments(path)
             .addQueryParameter("api_key", apiKey)
             .addQueryParameter("language", language)
-            .addQueryParameter("query", query)
-            .addQueryParameter("page", "1")
-            .addQueryParameter("include_adult", "false")
+            .apply { params.forEach { (name, value) -> addQueryParameter(name, value) } }
             .build()
 
         val json = executeGet(url)

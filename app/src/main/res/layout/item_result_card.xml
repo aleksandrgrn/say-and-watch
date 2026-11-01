@@ -15,7 +15,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="40dp"
         android:scaleType="centerCrop"
         android:contentDescription="@string/content_desc_poster" />
 
@@ -57,16 +57,15 @@
         android:focusableInTouchMode="false"
         android:visibility="gone" />
 
-    <!-- Info row (bottom: year + title) -->
+    <!-- Info row: вся полоса под постером (= его marginBottom), год + название по центру: отступы по 4 dp, как рамка постера -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="40dp"
         android:layout_gravity="bottom"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
-        android:layout_marginBottom="4dp"
         android:orientation="vertical"
-        android:gravity="top|center_horizontal"
+        android:gravity="center"
         android:focusable="false"
         android:focusableInTouchMode="false">
 
@@ -86,8 +85,9 @@
             android:layout_height="wrap_content"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
-            android:maxLines="2"
+            android:singleLine="true"
             android:ellipsize="end"
+            android:marqueeRepeatLimit="marquee_forever"
             android:gravity="center"
             android:focusable="false"
             android:focusableInTouchMode="false" />

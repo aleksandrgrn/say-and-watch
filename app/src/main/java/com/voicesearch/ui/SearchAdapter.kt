@@ -1,6 +1,7 @@
 package com.voicesearch.ui
 
 import android.content.res.ColorStateList
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,13 @@ class SearchAdapter(
             LayoutInflater.from(parent.context), parent, false
         )
         val holder = ResultViewHolder(binding, onItemClick)
+        // Длинное название: без фокуса многоточие, в фокусе бегущая строка.
+        // Marquee крутится только у выбранного TextView, а сам он фокус не берёт.
+        binding.root.setOnFocusChangeListener { _, hasFocus ->
+            binding.title.ellipsize =
+                if (hasFocus) TextUtils.TruncateAt.MARQUEE else TextUtils.TruncateAt.END
+            binding.title.isSelected = hasFocus
+        }
         return holder
     }
 

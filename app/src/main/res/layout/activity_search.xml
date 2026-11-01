@@ -154,15 +154,15 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusRight="@id/btnSmartTube" />
+            android:nextFocusRight="@id/btnPrisma" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnSmartTube"
+            android:id="@+id/btnPrisma"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="SmartTube"
+            android:text="@string/app_prisma"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
@@ -179,33 +179,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusLeft="@id/btnSmartTube"
-            android:nextFocusRight="@id/btnLazyMedia" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnLazyMedia"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="LazyMedia"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:background="@drawable/bg_app_button_selector"
-            android:nextFocusLeft="@id/btnLampa"
-            android:nextFocusRight="@id/btnPrisma" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnPrisma"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="@string/app_prisma"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:background="@drawable/bg_app_button_selector"
-            android:nextFocusLeft="@id/btnLazyMedia"
+            android:nextFocusLeft="@id/btnPrisma"
             android:nextFocusRight="@id/btnFlux" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -213,11 +187,37 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:text="@string/app_flux"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusLeft="@id/btnPrisma" />
+            android:nextFocusLeft="@id/btnLampa"
+            android:nextFocusRight="@id/btnSmartTube" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSmartTube"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="SmartTube"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/bg_app_button_selector"
+            android:nextFocusLeft="@id/btnFlux"
+            android:nextFocusRight="@id/btnLazyMedia" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnLazyMedia"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="LazyMedia"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/bg_app_button_selector"
+            android:nextFocusLeft="@id/btnSmartTube" />
 
     </LinearLayout>
 

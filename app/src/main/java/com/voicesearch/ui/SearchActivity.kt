@@ -87,7 +87,7 @@ class SearchActivity : AppCompatActivity() {
 
         // Порядок источников ключа: введённый пользователем → вшитый в сборку → диалог
         applyKey(keyStore.get() ?: BuildConfig.TMDB_API_KEY)
-        if (!tmdbProvider.isKeyConfigured) showApiKeyDialog()
+        if (!tmdbProvider.isKeyConfigured) showApiKeyDialog { showTrending() }
 
         // SpeechRecognizer initialization + voice button setup
         // Try standard check first, then try explicit component names for TV devices
@@ -158,8 +158,9 @@ class SearchActivity : AppCompatActivity() {
             // ROM pre-filled the query (e.g. from system speech pre-processor) — skip voice input
             binding.searchInput.setText(preFilledQuery)
             performSearch()
-        } else if (fromVoiceIntent && speechRecognizer != null) {
-            pendingVoiceStart = true
+        } else {
+            showTrending()
+            if (fromVoiceIntent && speechRecognizer != null) pendingVoiceStart = true
         }
     }
 
@@ -517,6 +518,33 @@ class SearchActivity : AppCompatActivity() {
                 binding.resultsRecyclerView.visibility = android.view.View.GONE
                 binding.providerLabel.visibility = android.view.View.GONE
             }
+        }
+    }
+
+    // ===== Trending =====
+
+    /**
+     * Лента на пустом экране, пока ничего не сказано. Идёт через [searchJob]:
+     * поиск или история отменяют её, и поздний ответ не перетрёт их результаты.
+     * Фокус не забирает, при ошибке экран просто остаётся пустым.
+     */
+    private fun showTrending() {
+        if (!tmdbProvider.isKeyConfigured) return
+        searchJob?.cancel()
+        resultsQuery = null
+        searchJob = lifecycleScope.launch {
+            val results = try {
+                tmdbProvider.trending()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Trending failed", e)
+                return@launch
+            }
+            if (results.isEmpty()) return@launch
+            searchAdapter.submitList(results)
+            binding.emptyStateText.visibility = android.view.View.GONE
+            binding.resultsRecyclerView.visibility = android.view.View.VISIBLE
         }
     }
 
