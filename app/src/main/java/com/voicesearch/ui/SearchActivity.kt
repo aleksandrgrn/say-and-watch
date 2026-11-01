@@ -140,7 +140,7 @@ class SearchActivity : AppCompatActivity() {
             onResultClick(result)
         }
         binding.resultsRecyclerView.apply {
-            layoutManager = GridLayoutManager(this@SearchActivity, 2, GridLayoutManager.HORIZONTAL, false)
+            layoutManager = EdgeAlignedGridLayoutManager(this@SearchActivity)
             adapter = searchAdapter
             isFocusable = false
             addItemDecoration(GridSpaceItemDecoration((AspectCardLayout.GAP_DP * resources.displayMetrics.density).toInt()))
@@ -254,6 +254,7 @@ class SearchActivity : AppCompatActivity() {
                 performSearch()
             } else {
                 Toast.makeText(this@SearchActivity, R.string.voice_error_no_match, Toast.LENGTH_SHORT).show()
+                focusFirstCardIfIdle()
             }
         }
 
@@ -287,6 +288,7 @@ class SearchActivity : AppCompatActivity() {
                 else ->
                     Toast.makeText(this@SearchActivity, R.string.voice_error_client, Toast.LENGTH_SHORT).show()
             }
+            focusFirstCardIfIdle()
         }
 
         override fun onEvent(eventType: Int, params: Bundle?) {
@@ -526,7 +528,8 @@ class SearchActivity : AppCompatActivity() {
     /**
      * Лента на пустом экране, пока ничего не сказано. Идёт через [searchJob]:
      * поиск или история отменяют её, и поздний ответ не перетрёт их результаты.
-     * Фокус не забирает, при ошибке экран просто остаётся пустым.
+     * Фокус берёт, только когда микрофон уже отслушал впустую ([focusFirstCardIfIdle]);
+     * при ошибке экран просто остаётся пустым.
      */
     private fun showTrending() {
         if (!tmdbProvider.isKeyConfigured) return
@@ -542,9 +545,22 @@ class SearchActivity : AppCompatActivity() {
                 return@launch
             }
             if (results.isEmpty()) return@launch
-            searchAdapter.submitList(results)
+            searchAdapter.submitList(results) { focusFirstCardIfIdle() }
             binding.emptyStateText.visibility = android.view.View.GONE
             binding.resultsRecyclerView.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    /**
+     * Микрофон отслушал, а запроса нет (молчание, не распознал, ошибка) — фокус на первую
+     * карточку, как после удачного поиска: искать снова проще кнопкой пульта.
+     * Не трогает фокус, если его уже увели с микрофона или распознавание ещё впереди.
+     */
+    private fun focusFirstCardIfIdle() {
+        if (isListening || pendingVoiceStart || !binding.voiceButton.isFocused) return
+        if (searchAdapter.itemCount == 0) return
+        binding.resultsRecyclerView.post {
+            binding.resultsRecyclerView.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus()
         }
     }
 
@@ -660,6 +676,38 @@ class SearchActivity : AppCompatActivity() {
                 Toast.makeText(this, getString(R.string.launch_no_handler, displayName), Toast.LENGTH_LONG).show()
             LaunchResult.ERROR ->
                 Toast.makeText(this, getString(R.string.launch_error, displayName), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * Сетка в два ряда, прокрутка к карточке в фокусе — ровно до края самой карточки.
+     * Штатная прокрутка показывает карточку вместе с отступом ItemDecoration, а карточки
+     * растянуты на всю ширину (AspectCardLayout.fitRow) — и ряд съезжал на ширину отступа.
+     */
+    private class EdgeAlignedGridLayoutManager(context: Context) :
+        GridLayoutManager(context, 2, HORIZONTAL, false) {
+
+        // Ряд закрывает экран ровно, следующий столбец начинается за краем и без запаса
+        // не строится: фокус с последней видимой карточки уходил на микрофон.
+        override fun calculateExtraLayoutSpace(state: RecyclerView.State, extraLayoutSpace: IntArray) {
+            extraLayoutSpace.fill(width / 4)
+        }
+
+        override fun requestChildRectangleOnScreen(
+            parent: RecyclerView,
+            child: android.view.View,
+            rect: Rect,
+            immediate: Boolean,
+            focusedChildVisible: Boolean
+        ): Boolean {
+            val dx = when {
+                child.left < paddingLeft -> child.left - paddingLeft
+                child.right > width - paddingRight -> child.right - (width - paddingRight)
+                else -> 0
+            }
+            if (dx == 0) return false
+            if (immediate) parent.scrollBy(dx, 0) else parent.smoothScrollBy(dx, 0)
+            return true
         }
     }
 
