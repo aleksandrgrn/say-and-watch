@@ -143,7 +143,7 @@ class SearchActivity : AppCompatActivity() {
             layoutManager = GridLayoutManager(this@SearchActivity, 2, GridLayoutManager.HORIZONTAL, false)
             adapter = searchAdapter
             isFocusable = false
-            addItemDecoration(GridSpaceItemDecoration((12 * resources.displayMetrics.density).toInt()))
+            addItemDecoration(GridSpaceItemDecoration((AspectCardLayout.GAP_DP * resources.displayMetrics.density).toInt()))
         }
 
         // App buttons
