@@ -442,4 +442,52 @@ class TmdbSearchProviderTest {
         assertEquals("/3/trending/all/week", request.requestUrl?.encodedPath)
         assertEquals("ru-RU", request.requestUrl?.queryParameter("language"))
     }
+
+    // ===== Details =====
+
+    @Test
+    fun `details for tv asks content ratings and videos and parses them`() = runBlocking {
+        server.enqueue(MockResponse().setBody("""
+            {
+              "episode_run_time":[],
+              "last_episode_to_air":{"runtime":45},
+              "number_of_seasons":3,
+              "content_ratings":{"results":[{"iso_3166_1":"RU","rating":"18+"}]},
+              "videos":{"results":[{"key":"abc","site":"YouTube","type":"Trailer","iso_639_1":"ru","official":true}]}
+            }
+        """.trimIndent()))
+
+        val details = provider.details("tv", "96677")
+
+        assertEquals("18+", details.ageRating)
+        assertEquals(45, details.runtimeMinutes)
+        assertEquals(3, details.seasons)
+        assertEquals("abc", details.trailerKey)
+        val url = server.takeRequest().requestUrl!!
+        assertEquals("/3/tv/96677", url.encodedPath)
+        assertEquals("videos,content_ratings", url.queryParameter("append_to_response"))
+        assertEquals("ru", url.queryParameter("include_video_language"))
+    }
+
+    @Test
+    fun `details for movie asks release dates`() = runBlocking {
+        server.enqueue(MockResponse().setBody("""
+            {
+              "runtime":127,
+              "release_dates":{"results":[
+                {"iso_3166_1":"US","release_dates":[{"certification":"R","type":3}]},
+                {"iso_3166_1":"RU","release_dates":[{"certification":"","type":1},{"certification":"18+","type":3}]}
+              ]},
+              "videos":{"results":[{"key":"ru1","site":"YouTube","type":"Trailer","iso_639_1":"ru","official":false}]}
+            }
+        """.trimIndent()))
+
+        val details = provider.details("movie", "603")
+        assertEquals(127, details.runtimeMinutes)
+        assertEquals("18+", details.ageRating)
+        assertEquals("ru1", details.trailerKey)
+        val url = server.takeRequest().requestUrl!!
+        assertEquals("/3/movie/603", url.encodedPath)
+        assertEquals("videos,release_dates", url.queryParameter("append_to_response"))
+    }
 }

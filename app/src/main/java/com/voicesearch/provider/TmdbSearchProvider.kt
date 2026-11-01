@@ -3,6 +3,7 @@ package com.voicesearch.provider
 import android.util.Log
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.voicesearch.model.MediaDetails
 import com.voicesearch.model.SearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -35,6 +36,7 @@ class TmdbSearchProvider(
 
     private val searchResponseAdapter = moshi.adapter(TmdbMultiSearchResponse::class.java)
     private val genreListAdapter = moshi.adapter(TmdbGenreListResponse::class.java)
+    private val detailsAdapter = moshi.adapter(TmdbDetailsResponse::class.java)
 
     private val genreMutex = Mutex()
     private var genreCache: Map<Int, String>? = null
@@ -75,6 +77,30 @@ class TmdbSearchProvider(
             fetchResults("trending/all/week")
                 .results
                 .mapNotNull { item -> TmdbMapper.mapResultItem(item, cache) }
+        }
+    }
+
+    /**
+     * Возрастной рейтинг, длительность и трейлер одним запросом — для карточки фильма.
+     * [type] — "movie" | "tv". Бросает то же, что и поиск.
+     */
+    suspend fun details(type: String, id: String): MediaDetails {
+        return withContext(Dispatchers.Default) {
+            if (!isKeyConfigured) throw TmdbException.ApiKeyInvalid()
+            val ratings = if (type == "tv") "content_ratings" else "release_dates"
+            val json = executeGet(buildUrl(
+                "$type/$id",
+                "append_to_response" to "videos,$ratings",
+                "include_video_language" to "ru"
+            ))
+            val response = try {
+                detailsAdapter.fromJson(json) ?: throw TmdbException.ParseError("Null details response")
+            } catch (e: com.squareup.moshi.JsonDataException) {
+                throw TmdbException.ParseError("Invalid JSON in details response: ${e.message}")
+            } catch (e: java.io.IOException) {
+                throw TmdbException.ParseError("Invalid JSON in details response: ${e.message}")
+            }
+            TmdbMapper.mapDetails(response)
         }
     }
 
@@ -155,19 +181,19 @@ class TmdbSearchProvider(
         return response.genres
     }
 
-    private suspend fun fetchResults(
-        path: String,
-        vararg params: Pair<String, String>
-    ): TmdbMultiSearchResponse {
-        val baseHttpUrl = baseUrl.toHttpUrl()
-        val url = baseHttpUrl.newBuilder()
+    private fun buildUrl(path: String, vararg params: Pair<String, String>): okhttp3.HttpUrl =
+        baseUrl.toHttpUrl().newBuilder()
             .addPathSegments(path)
             .addQueryParameter("api_key", apiKey)
             .addQueryParameter("language", language)
             .apply { params.forEach { (name, value) -> addQueryParameter(name, value) } }
             .build()
 
-        val json = executeGet(url)
+    private suspend fun fetchResults(
+        path: String,
+        vararg params: Pair<String, String>
+    ): TmdbMultiSearchResponse {
+        val json = executeGet(buildUrl(path, *params))
         return try {
             searchResponseAdapter.fromJson(json)
                 ?: throw TmdbException.ParseError("Null search response")

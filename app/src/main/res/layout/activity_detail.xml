@@ -19,7 +19,7 @@
         android:contentDescription="@string/back_button"
         android:scaleType="centerInside"
         android:padding="8dp"
-        android:nextFocusDown="@id/detailTitle"
+        android:nextFocusDown="@id/btnTrailer"
         android:nextFocusRight="@id/detailTitle"
         android:nextFocusLeft="@id/backButton"
         app:layout_constraintTop_toTopOf="parent"
@@ -37,6 +37,26 @@
         android:focusable="false"
         app:layout_constraintTop_toBottomOf="@id/backButton"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Trailer: под постером, во всю его ширину. Русский трейлер TMDB, иначе поиск в SmartTube;
+         серая, только если нет ни того ни другого. Down/Right переназначаются из кода -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnTrailer"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        android:text="@string/trailer_button"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:background="@drawable/bg_app_button_selector"
+        android:enabled="false"
+        android:focusable="false"
+        android:nextFocusUp="@id/backButton"
+        android:nextFocusDown="@id/btnNum"
+        android:nextFocusRight="@id/btnNum"
+        app:layout_constraintTop_toBottomOf="@id/detailPoster"
+        app:layout_constraintStart_toStartOf="@id/detailPoster"
+        app:layout_constraintEnd_toEndOf="@id/detailPoster" />
 
     <!-- Title -->
     <TextView
@@ -177,7 +197,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusRight="@id/btnPrisma" />
 
@@ -191,7 +211,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusLeft="@id/btnNum"
             android:nextFocusRight="@id/btnLampa" />
@@ -206,7 +226,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusLeft="@id/btnPrisma"
             android:nextFocusRight="@id/btnFlux" />
@@ -221,7 +241,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusLeft="@id/btnLampa"
             android:nextFocusRight="@id/btnSmartTube" />
@@ -236,7 +256,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusLeft="@id/btnFlux"
             android:nextFocusRight="@id/btnLazyMedia" />
@@ -250,7 +270,7 @@
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:background="@drawable/bg_app_button_selector"
-            android:nextFocusUp="@id/backButton"
+            android:nextFocusUp="@id/btnTrailer"
             android:nextFocusDown="@id/backButton"
             android:nextFocusLeft="@id/btnSmartTube" />
 

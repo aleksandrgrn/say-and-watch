@@ -23,6 +23,9 @@
 -keep class com.voicesearch.provider.TmdbException { *; }
 -keep class com.voicesearch.provider.TmdbException$* { *; }
 -keep class com.voicesearch.provider.TmdbMapper { *; }
+# Все DTO TMDB (TmdbDto.kt) разом: поштучный список забыли дополнить при новых
+# классах деталей — release упал на открытии карточки, debug-тесты этого не ловят.
+-keep class com.voicesearch.provider.Tmdb* { *; }
 
 # Поисковый запрос пользователя не должен попадать в logcat release-сборки.
 -assumenosideeffects class android.util.Log {

@@ -48,4 +48,18 @@
     <string name="api_key_backspace">Стереть</string>
     <string name="app_prisma" translatable="false">Prisma</string>
     <string name="app_flux" translatable="false">Flux</string>
+    <string name="trailer_button">▶ Трейлер</string>
+    <string name="trailer_search_query">%s трейлер</string>
+    <string name="trailer_no_player">Не удалось открыть трейлер: нет приложения для YouTube</string>
+    <string name="duration_movie">Длительность: %s</string>
+    <string name="duration_episode">Серия ≈ %s</string>
+    <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="duration_minutes">%d мин</string>
+    <string name="duration_hours">%d ч</string>
+    <plurals name="seasons">
+        <item quantity="one">%d сезон</item>
+        <item quantity="few">%d сезона</item>
+        <item quantity="many">%d сезонов</item>
+        <item quantity="other">%d сезона</item>
+    </plurals>
 </resources>
